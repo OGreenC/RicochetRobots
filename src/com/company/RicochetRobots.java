@@ -21,22 +21,16 @@ public class RicochetRobots {
     public static void main(String[] args) throws IOException {
         readInput();
 
-        calculatePath(false);
-
+        calculatePath();
     }
 
-    public static void calculatePath(boolean debug) {
-
-        if(debug) printMap();
-
+    public static void calculatePath() {
         nodeBFS();
 
         String[] path = goal.getPath().split(" ");
         for(int i = 1; i < path.length; i++) {
             System.out.println(path[i]);
         }
-
-        if(debug) printMap();
 
     }
 
@@ -73,39 +67,7 @@ public class RicochetRobots {
 
 
 
-    public static void printMap() {
-        //Create map
-        String[][] viewBoard = new String[N+2][N+2];
-        for (int y = 0; y < N+2; y++) {
-            for (int x = 0; x < N+2; x++) {
-                if((y == 0 || y == N+1) && (x == 0 || x == N+1)) {
-                    viewBoard[y][x] = " * ";
-                    continue;
-                }
-                if(y == 0 || y == N+1) {
-                    viewBoard[y][x] = "---";
-                    continue;
-                }
-                if(x == 0 || x == N+1) {
-                    viewBoard[y][x] = " | ";
-                    continue;
-                }
-                viewBoard[y][x] = (board[y-1][x-1] == null) ? " # " : "   ";
-            }
-        }
-        viewBoard[goal.x+1][goal.y+1] = " G ";
-        for (Robot r : robots) {
-            viewBoard[r.getY() + 1][r.getX() + 1] = " " + ((char) (r.id + 48)) + " ";
-        }
 
-        //print map
-        for (String[] cRow: viewBoard) {
-            for (String c: cRow) {
-                System.out.print(c);
-            }
-            System.out.println();
-        }
-    }
 
     /**
      * Read Console Input
