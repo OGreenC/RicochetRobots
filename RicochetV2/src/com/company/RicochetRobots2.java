@@ -99,11 +99,6 @@ public class RicochetRobots2 {
                 //Visiting Left
                 Node nL = n.getStopNodeL(p.robots);
                 if(nL != null) {
-                    for (short s: p.robots) {
-                        System.out.print(s + " ");
-                    }
-                    System.out.println(" -" + nL.y + ":" + nL.x);
-
                     short[] updatedRobotLoc = Arrays.copyOf(p.robots,p.robots.length);
                     updatedRobotLoc[i] = nL.y;
                     updatedRobotLoc[i + 1] = nL.x;
