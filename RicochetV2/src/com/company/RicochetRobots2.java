@@ -19,44 +19,36 @@ public class RicochetRobots2 {
     public static Node goal;
 
     public static void main(String[] args) throws IOException {
-        readInput();
+        readInput(); //Read data from Console, and generate board
 
-        calculatePath(false);
+        calculatePath(); //Run path finding algorithm.
 
     }
 
-    public static void calculatePath(boolean debug) {
+    public static void calculatePath() {
+        Path path = pathBFS(); //run BFS algorithm.
 
-        if(debug) printMap();
-
-        //System.out.println(board[robots[0]][robots[1]].getStopNodeU(robots).x + " " + board[robots[0]][robots[1]].getStopNodeU(robots).y);
-        //System.out.println(goal.x + " - " + goal.y);
-        //System.out.println(goal.pathParent.x + " - " + goal.pathParent.y);
-
-
-        Path path = nodeBFS();
-
+        //Print path from String, steps seperated with spaces
         String[] pathSteps = path.path.split(" ");
         for(int i = 1; i < pathSteps.length; i++) {
             System.out.println(pathSteps[i]);
         }
-
-        if(debug) printMap();
-
     }
 
+    public static Path pathBFS() {
+        Queue<Path> q = new LinkedList<>();
 
-    //public static Queue<Node> q = new LinkedList<>();
-    public static Queue<Path> q = new LinkedList<>();
+        q.add(new Path(robots)); //Add initial path array, with initial robot placement.
 
-    public static Path nodeBFS() {
-        q.add(new Path(Arrays.copyOf(robots,robots.length)));
-
+        //Modified BFS, as we have to test every scenario.
+        //Stop when queue is empty, or path found (stop BFS when first (and thus fastest) path found)
         Path foundPath = null;
         while(!q.isEmpty() && foundPath == null) {
-            Path p = q.remove();
+            Path p = q.remove(); //Pop path from queue
 
-            for(int i = 0; i < p.robots.length; i=i+2) { //Iterate over all robots for each node in each part of the path.
+            //Iterate over all robots (i=i+2 as 1 robot takes 2 spaces in array)
+            for(int i = 0; i < p.robots.length; i=i+2) {
+                //Get node robot is on from board 2D array:
                 Node n = board[p.robots[i]][p.robots[i+1]];
 
                 //Visiting upwards
@@ -66,9 +58,7 @@ public class RicochetRobots2 {
                     updatedRobotLoc[i] = nU.y;
                     updatedRobotLoc[i + 1] = nU.x;
                     Path newPath = new Path(updatedRobotLoc);
-                    newPath.path = p.path;
-                    newPath.addPath(i/2,'U');
-
+                    newPath.path = p.path + " " + i/2 + 'U';
                     if(nU == goal && i/2 == 0) {
                         foundPath = newPath;
                         break;
@@ -85,14 +75,11 @@ public class RicochetRobots2 {
                     updatedRobotLoc[i] = nD.y;
                     updatedRobotLoc[i + 1] = nD.x;
                     Path newPath = new Path(updatedRobotLoc);
-                    newPath.path = p.path;
-                    newPath.addPath(i/2,'D');
-
+                    newPath.path = p.path  + " " + i/2 + 'D';
                     if(nD == goal && i/2 == 0) {
                         foundPath = newPath;
                         break;
                     }
-
                     q.add(newPath);
                 }
 
@@ -103,9 +90,7 @@ public class RicochetRobots2 {
                     updatedRobotLoc[i] = nL.y;
                     updatedRobotLoc[i + 1] = nL.x;
                     Path newPath = new Path(updatedRobotLoc);
-                    newPath.path = p.path;
-                    newPath.addPath(i/2,'L');
-
+                    newPath.path = p.path + " " + i/2 + 'L';
                     if(nL == goal && i/2 == 0) {
                         foundPath = newPath;
                         break;
@@ -121,9 +106,7 @@ public class RicochetRobots2 {
                     updatedRobotLoc[i] = nR.y;
                     updatedRobotLoc[i + 1] = nR.x;
                     Path newPath = new Path(updatedRobotLoc);
-                    newPath.path = p.path;
-                    newPath.addPath(i/2,'R');
-
+                    newPath.path = p.path  + " " + i/2 + 'R';
                     if(nR == goal && i/2 == 0) {
                         foundPath = newPath;
                         break;
@@ -139,41 +122,6 @@ public class RicochetRobots2 {
 
 
 
-
-
-    public static void printMap() {
-        //Create map
-        String[][] viewBoard = new String[N+2][N+2];
-        for (int y = 0; y < N+2; y++) {
-            for (int x = 0; x < N+2; x++) {
-                if((y == 0 || y == N+1) && (x == 0 || x == N+1)) {
-                    viewBoard[y][x] = " * ";
-                    continue;
-                }
-                if(y == 0 || y == N+1) {
-                    viewBoard[y][x] = "---";
-                    continue;
-                }
-                if(x == 0 || x == N+1) {
-                    viewBoard[y][x] = " | ";
-                    continue;
-                }
-                viewBoard[y][x] = (board[y-1][x-1] == null) ? " # " : "   ";
-            }
-        }
-        viewBoard[goal.x+1][goal.y+1] = " G ";
-        for (int i = 0; i < robots.length; i = i + 2) {
-            viewBoard[robots[i]][robots[i + 1]] = " " + ((char) (i / 2)) + " ";
-        }
-
-        //print map
-        for (String[] cRow: viewBoard) {
-            for (String c: cRow) {
-                System.out.print(c);
-            }
-            System.out.println();
-        }
-    }
 
     /**
      * Read Console Input
@@ -191,61 +139,57 @@ public class RicochetRobots2 {
         board = new Node[N][N]; //(1 for air : 0 for wall)
         robots = new short[2*R];  //([com.company.Robot][0: x, 1: y])
 
+        //Run through map generation. Following inputs are to be expected:
+        // 35 = '#'
+        // 32 = ' '
+        // 71 = 'G'
+        // 10 = newline
+        // 13 = Carriage return (Dont know what this is / Ignore)
+        for(short y = 0; y < N; y++) {
+            for(short x = 0; x < N; x++) {
+                int input = br.read();
 
-        short y = 0;
-        short x = 0;
-
-        // # = 35
-        // <space> = 32
-        // G = 71
-        while(y < N) {
-            int input = br.read();
-            if( input == 13) { continue; }//In codejudge a 13 (Carriage return) is also send, before line feed (10)
-            if(input == 10) {
-                y++;
-                x = 0;
-                continue;
-            }
-            if(input == 32) {
-                board[y][x] = new Node(y, x);
-            } else if(input == 71) {
-                Node n = new Node(y, x);
-                board[y][x] = n;
-                goal = n;
-            } else if(input == 35) {
-                //Code for setting S and W for all nodes (current x,y is a wall (null))
-                // - Nodes on top/left should be parents to all above nodes with no direct wall between
-
-                //South com.company.Node
-                if(y - 1 > 0 && board[y - 1][x] != null) {
-                    for(int ty = y - 2; ty >= 0; ty--) {
-                        if(board[ty][x] == null) {
-                            break;
-                        }
-                        board[ty][x].D = board[y - 1][x];
-                    }
+                if(input == 10 || input == 13) { //Ignore newline and Carriage return
+                    x--;
+                    continue;
                 }
 
-                //East com.company.Node
-                if(x - 1 > 0 && board[y][x - 1] != null) {
-                    for(int tx = x - 2; tx >= 0; tx--) {
-                        if(board[y][tx] == null) {
-                            break;
+                if(input == 32) { // ' ' (open field)
+                    board[y][x] = new Node(y, x);
+                } else if(input == 35) { // '#' (Wall field)
+                    //Walls do not have a Node, but are used to set D and R nodes on all already existing Nodes:
+                    if(y - 1 > 0 && board[y - 1][x] != null) {
+                        for(int ty = y - 2; ty >= 0; ty--) { //All nodes above (above = lower y)
+                            if(board[ty][x] == null) {
+                                break;
+                            }
+                            board[ty][x].D = board[y - 1][x];
                         }
-                        board[y][tx].R = board[y][x - 1];
                     }
+                    //East com.company.Node
+                    if(x - 1 > 0 && board[y][x - 1] != null) {
+                        for(int tx = x - 2; tx >= 0; tx--) { //All to the left (left = lower x)
+                            if(board[y][tx] == null) {
+                                break;
+                            }
+                            board[y][tx].R = board[y][x - 1];
+                        }
+                    }
+                } else if(input == 71) { // 'G' (Goal field)
+                    Node n = new Node(y, x);
+                    board[y][x] = n;
+                    goal = n;
+                } else { // Rest should be numbers from 0 to 9 (Robots)
+                    Node node = new Node(y,x);
+                    board[y][x] = node;
+                    robots[(input-48)*2] = y;
+                    robots[(input-48)*2 + 1] = x;
                 }
-            } else {
-                Node node = new Node(y,x);
-                board[y][x] = node;
-                robots[(input-48)*2] = y;
-                robots[(input-48)*2 + 1] = x;
             }
-            x++;
         }
 
-        //Only thing left, is to run the West/South setting code for the East and south-most nodes.
-        //East border
+        //Only thing left, is to run the last row/col, to set R and D.
+        //Right Border
         for(int ty = 0; ty < N; ty++) {
             if(board[ty][N-1] == null) continue;
             for(int tx = N-2; tx >= 0; tx--) {
@@ -253,7 +197,7 @@ public class RicochetRobots2 {
                 board[ty][tx].R = board[ty][N-1];
             }
         }
-        //South border
+        //Down Border
         for(int tx = 0; tx < N; tx++) {
             if(board[N-1][tx] == null) continue;
             for(int ty = N-2; ty >= 0; ty--) {
@@ -265,29 +209,19 @@ public class RicochetRobots2 {
 }
 
 class Path {
-
     public String path = "";
     public short[] robots;
 
     public Path(short[] robots) {
         this.robots = robots;
     }
-
-    public void addPath(int robot, char dir) {
-        path += " " + robot + dir;
-    }
-
 }
 
 
-class Node {
-    public Node U = null;
-    public Node R = null;
-    public Node D = null;
-    public Node L = null;
 
-    public short x;
-    public short y;
+class Node {
+    public Node U,R,D,L = null;
+    public short x,y;
 
     public Node(short y, short x) {
 
@@ -319,6 +253,9 @@ class Node {
             }
         }
     }
+
+
+    //Når pNode er defineret til this.u, så ændre jeg vel også på this.u når jeg ændre på pNode senere hen??
 
     //check if nessecary to stop earlier
     public Node getStopNodeU(short[] robots) {
@@ -369,13 +306,5 @@ class Node {
         }
         return pNode;
     }
-
-    public void printParents() {
-        System.out.println(" [" + " x " + "," + " y " + "]");
-        System.out.println("Loc: [" + x + "," + y + "]");
-        System.out.println("N:   [" + ((U == null) ? "N,N" : U.x + "," + U.y) + "]");
-        System.out.println("E:   [" + ((R == null) ? "N,N" : R.x + "," + R.y) + "]");
-        System.out.println("S:   [" + ((D == null) ? "N,N" : D.x + "," + D.y) + "]");
-        System.out.println("W:   [" + ((L == null) ? "N,N" : L.x + "," + L.y) + "]");
-    }
 }
+
