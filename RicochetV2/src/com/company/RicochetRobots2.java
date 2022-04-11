@@ -12,6 +12,11 @@ import static com.company.RicochetRobots2.robots;
 
 public class RicochetRobots2 {
 
+    /**
+     * GEM ROBOTS SOM EN INTEGER I STEDET! NUMMERER ALLE POSITIONER LEFT TO RIGHT EACH ROW
+     */
+
+
     public static int N;
     public static int R;
     public static Node[][] board;
@@ -259,52 +264,56 @@ class Node {
 
     //check if nessecary to stop earlier
     public Node getStopNodeU(short[] robots) {
-        Node pNode = this.U;
-        if(pNode == null) return pNode;
+        if(this.U == null) return null;
+        short y = U.y;
+        short x = U.x;
         for(int i = 0; i < robots.length; i = i + 2) { //Getting robot indexes (looping through all robots)
             if(this.x != robots[i + 1] || this.y <= robots[i]) continue; //If not same y col or below or equal node (equal means robot is standing there,and is the moving robot)
-            if(pNode.y <= robots[i]) { // if robot is between else defined goToNode and current node:
-                pNode = board[robots[i] + 1][this.x];
+            if(y <= robots[i]) { // if robot is between else defined goToNode and current node:
+                y = (short) (robots[i] + 1);
                 continue;
             }
         }
-        return pNode;
+        return board[y][x];
     }
     public Node getStopNodeD(short[] robots) {
-        Node pNode = this.D;
-        if(pNode == null) return pNode;
+        if(this.D == null) return null;
+        short y = D.y;
+        short x = D.x;
         for(int i = 0; i < robots.length; i = i + 2) {
             if(this.x != robots[i + 1] || this.y >= robots[i]) continue;
-            if(pNode.y >= robots[i]) {
-                pNode = board[robots[i] - 1][this.x];
+            if(y >= robots[i]) {
+                y = (short) (robots[i] - 1);
                 continue;
             }
         }
-        return pNode;
+        return board[y][x];
     }
     public Node getStopNodeL(short[] robots) {
-        Node pNode = this.L;
-        if(pNode == null) return pNode;
+        if(this.L == null) return null;
+        short y = L.y;
+        short x = L.x;
         for(int i = 0; i < robots.length; i = i + 2) {
             if(this.y != robots[i] || this.x <= robots[i + 1]) continue;
-            if(pNode.x <= robots[i + 1]) {
-                pNode = board[this.y][robots[i + 1] + 1];
+            if(x <= robots[i + 1]) {
+                x = (short) (robots[i + 1] + 1);
                 continue;
             }
         }
-        return pNode;
+        return board[y][x];
     }
     public Node getStopNodeR(short[] robots) {
-        Node pNode = this.R;
-        if(pNode == null) return pNode;
+        if(this.R == null) return null;
+        short y = R.y;
+        short x = R.x;
         for(int i = 0; i < robots.length; i = i + 2) {
             if(this.y != robots[i] || this.x >= robots[i + 1]) continue;
-            if(pNode.x >= robots[i + 1]) {
-                pNode = board[this.y][robots[i + 1] - 1];
+            if(x >= robots[i + 1]) {
+                x = (short) (robots[i + 1] - 1);
                 continue;
             }
         }
-        return pNode;
+        return board[y][x];
     }
 }
 
