@@ -20,12 +20,30 @@ public class RicochetRobots2 {
     //public static short[] robots;
     public static Node[] robots;
     public static Node goal;
+    public static Queue<Path> q = new LinkedList<>();
+    public static Path foundPath = null;
 
     public static void main(String[] args) throws IOException {
         readInput(); //Read data from Console, and generate board
 
-        calculatePath(); //Run path finding algorithm.
 
+
+        Set <Node> set1 = new HashSet<Node>();
+        set1.add(new Node((short) 4,(short) 3));
+        set1.add(new Node((short) 1,(short) 2));
+        set1.add(new Node((short) 2,(short) 3));
+
+        Set <Node> set2 = new HashSet<Node>();
+        set2.add(new Node((short) 4,(short) 3));
+        set2.add(new Node((short) 1,(short) 2));
+        set2.add(new Node((short) 2,(short) 3));
+
+        System.out.println("set1: " + set1.hashCode());
+        System.out.println("set2: " + set2.hashCode());
+        System.out.println("set1: " + set1.hashCode());
+
+
+        calculatePath(); //Run path finding algorithm.
     }
 
     public static void calculatePath() {
@@ -39,121 +57,65 @@ public class RicochetRobots2 {
     }
 
     public static Path pathBFS() {
-        Queue<Path> q = new LinkedList<>();
 
         q.add(new Path(robots)); //Add initial path array, with initial robot placement.
 
         //Modified BFS, as we have to test every scenario.
         //Stop when queue is empty, or path found (stop BFS when first (and thus fastest) path found)
-        Path foundPath = null;
         while(!q.isEmpty() && foundPath == null) {
-
             Path p = q.remove(); //Pop path from queue
 
-            //System.out.println(p.path);
-
             //Iterate over all robots (i=i+2 as 1 robot takes 2 spaces in array)
-            for(int i = 0; i < p.robots.length; i++) {
-                //Get node robot is on from board 2D array:
+            for(int i = 0; i < R; i++) {
                 Node n = p.robots[i];
+
                 //Visiting upwards
-                Node nU = n.getStopNodeU(p.robots);
-                if(nU != null) {
-                    Node[] updatedRobotLoc = Arrays.copyOf(p.robots,p.robots.length);
-                    updatedRobotLoc[i] = nU;
-                    Set <Node> set = new HashSet<Node>();
-                    for(int j = 1; j < R; j++) {
-                        set.add(updatedRobotLoc[j]);
-                    }
-
-                    if(!updatedRobotLoc[0].seenLayouts.contains(set)) {
-                        updatedRobotLoc[0].seenLayouts.add(set);
-
-                        Path newPath = new Path(updatedRobotLoc);
-                        newPath.path = p.path + " " + i + 'U';
-                        if(nU == goal && i == 0) {
-                            foundPath = newPath;
-                            break;
-                        }
-                        q.add(newPath);
-                    }
-                }
+                visitNode(n.getStopNodeU(p.robots), p, i, 'U');
 
                 //Visiting downwards
-                Node nD = n.getStopNodeD(p.robots);
-                if(nD != null) {
-                    Node[] updatedRobotLoc = Arrays.copyOf(p.robots,p.robots.length);
-                    updatedRobotLoc[i] = nD;
-                    Set <Node> set = new HashSet<Node>();
-                    for(int j = 1; j < R; j++) {
-                        set.add(updatedRobotLoc[j]);
-                    }
-
-                    if(!updatedRobotLoc[0].seenLayouts.contains(set)) {
-                        updatedRobotLoc[0].seenLayouts.add(set);
-
-                        Path newPath = new Path(updatedRobotLoc);
-                        newPath.path = p.path + " " + i + 'D';
-                        if (nD == goal && i == 0) {
-                            foundPath = newPath;
-                            break;
-                        }
-                        q.add(newPath);
-                    }
-                }
+                visitNode(n.getStopNodeD(p.robots), p, i, 'D');
 
                 //Visiting Left
-                Node nL = n.getStopNodeL(p.robots);
-                if(nL != null) {
-                    Node[] updatedRobotLoc = Arrays.copyOf(p.robots,p.robots.length);
-                    updatedRobotLoc[i] = nL;
-                    Set <Node> set = new HashSet<Node>();
-                    for(int j = 1; j < R; j++) {
-                        set.add(updatedRobotLoc[j]);
-                    }
-
-                    if(!updatedRobotLoc[0].seenLayouts.contains(set)) {
-                        updatedRobotLoc[0].seenLayouts.add(set);
-
-                        Path newPath = new Path(updatedRobotLoc);
-                        newPath.path = p.path + " " + i + 'L';
-                        if (nL == goal && i == 0) {
-                            foundPath = newPath;
-                            break;
-                        }
-                        q.add(newPath);
-                    }
-                }
+                visitNode(n.getStopNodeL(p.robots), p, i, 'L');
 
                 //Visiting Right
-                Node nR = n.getStopNodeR(p.robots);
-                if(nR != null) {
-                    Node[] updatedRobotLoc = Arrays.copyOf(p.robots,p.robots.length);
-                    updatedRobotLoc[i] = nR;
-                    Set <Node> set = new HashSet<Node>();
-                    for(int j = 1; j < R; j++) {
-                        set.add(updatedRobotLoc[j]);
-                    }
+                visitNode(n.getStopNodeR(p.robots), p, i, 'R');
 
-                    if(!updatedRobotLoc[0].seenLayouts.contains(set)) {
-                        updatedRobotLoc[0].seenLayouts.add(set);
-
-                        Path newPath = new Path(updatedRobotLoc);
-                        newPath.path = p.path + " " + i + 'R';
-                        if (nR == goal && i == 0) {
-                            foundPath = newPath;
-                            break;
-                        }
-                        q.add(newPath);
-                    }
-                }
             }
         }
-        //System.out.println("BFS DONE: " + q.size() + " : " + (foundPath == null));
         return foundPath;
     }
 
+    public static void visitNode(Node visitNode, Path path, int robotN, char dirChar) {
+        if(visitNode != null) {
+            Node[] updatedRobotLoc = new Node[R];
+            Node[] setArray = new Node[R - 1];
 
+            updatedRobotLoc[0] = path.robots[0];
+            for(int j = 1; j < R; j++) {
+                updatedRobotLoc[j] = path.robots[j];
+                setArray[j] = path.robots[j];
+            }
+            Arrays.sort(setArray);
+
+            Node[] updatedRobotLoc = Arrays.copyOf(path.robots,path.robots.length);
+            updatedRobotLoc[robotN] = visitNode;
+            Set <Node> set = new HashSet<Node>();
+            for(int j = 1; j < R; j++) {
+                set.add(updatedRobotLoc[j]);
+            }
+
+            if(updatedRobotLoc[0].seenLayouts.add(set)) {
+
+                Path newPath = new Path(updatedRobotLoc);
+                newPath.path = path.path + " " + robotN + dirChar;
+                if (visitNode == goal && robotN == 0) {
+                    foundPath = newPath;
+                }
+                q.add(newPath);
+            }
+        }
+    }
 
 
     /**
@@ -181,7 +143,6 @@ public class RicochetRobots2 {
         for(short y = 0; y < N; y++) {
             for(short x = 0; x < N; x++) {
                 int input = br.read();
-
                 if(input == 10 || input == 13) { //Ignore newline and Carriage return
                     x--;
                     continue;
@@ -249,9 +210,20 @@ class Path {
     }
 }
 
+class mapLayout {
+    String key;
 
 
-class Node {
+    public mapLayout(String key) {
+
+    }
+
+
+
+}
+
+
+class Node implements Comparable<Node> {
     public Node U,R,D,L = null;
     public short x,y;
     public Set <Set<Node>> seenLayouts = new HashSet<Set<Node>>();
@@ -287,8 +259,17 @@ class Node {
         }
     }
 
-
-    //Når pNode er defineret til this.u, så ændre jeg vel også på this.u når jeg ændre på pNode senere hen??
+    @Override
+    public int compareTo(Node that) {
+        //returns -1 if "this" object is less than "that" object
+        //returns 0 if they are equal
+        //returns 1 if "this" object is greater than "that" object
+        if(this.y < that.y) return -1;
+        if(this.y > that.y) return 1;
+        if(this.x < that.x) return -1;
+        if(this.x > that.x) return 1;
+        return 0;
+    }
 
     //check if nessecary to stop earlier
     public Node getStopNodeU(Node[] robots) {
@@ -343,5 +324,6 @@ class Node {
         }
         return board[y][x];
     }
+
 }
 
