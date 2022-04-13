@@ -1,5 +1,6 @@
 package com.company;
 
+import javax.xml.crypto.NodeSetData;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -29,10 +30,6 @@ public class RicochetRobots2 {
 
 
 
-        Node[] n1 = {new Node((short) 4,(short) 3),new Node((short) 1,(short) 2),new Node((short) 2,(short) 3)};
-        MapLayout m1 = new MapLayout(n1);
-        Node[] n2 = {new Node((short) 4,(short) 3),new Node((short) 1,(short) 2),new Node((short) 2,(short) 3)};
-        MapLayout m2 = new MapLayout(n2);
 
         calculatePath(); //Run path finding algorithm.
     }
@@ -71,7 +68,6 @@ public class RicochetRobots2 {
 
                 //Visiting Right
                 visitNode(n.getStopNodeR(p.robots), p, i, 'R');
-
             }
         }
         return foundPath;
@@ -80,8 +76,7 @@ public class RicochetRobots2 {
     public static void visitNode(Node visitNode, Path path, int robotN, char dirChar) {
         if(visitNode != null) {
             Node[] updatedRobotLoc = new Node[R];
-            Node[] setArray = new Node[R - 1];
-
+            Set <Node> nodeSet = new HashSet<Node>();
             if(robotN == 0) {
                 updatedRobotLoc[0] = visitNode;
             } else {
@@ -90,17 +85,16 @@ public class RicochetRobots2 {
             for(int j = 1; j < R; j++) {
                 if(j == robotN) {
                     updatedRobotLoc[j] = visitNode;
-                    setArray[j-1] = visitNode;
+                    nodeSet.add(visitNode);
                 } else {
                     updatedRobotLoc[j] = path.robots[j];
-                    setArray[j-1] = path.robots[j];
+                    nodeSet.add(path.robots[j]);
                 }
             }
-            MapLayout mapLayout = new MapLayout(setArray);
-            mapLayout.hashCode();
+
+            MapLayout mapLayout = new MapLayout(nodeSet);
 
             if(updatedRobotLoc[0].seenLayouts.add(mapLayout)) {
-
                 Path newPath = new Path(updatedRobotLoc);
                 newPath.path = path.path + " " + robotN + dirChar;
                 if (visitNode == goal && robotN == 0) {
@@ -205,25 +199,22 @@ class Path {
 }
 
 class MapLayout {
-    String key;
+    public int hashCode;
+    public Set<Node> nodeSet;
 
-    public MapLayout(Node[] nodes) {
-        Arrays.sort(nodes);
-        StringBuilder str = new StringBuilder();
-        for (Node n : nodes) {
-            str.append(n.x).append(",").append(n.y).append(",");
-        }
-        this.key = str.toString();
+    public MapLayout(Set <Node> nodeSet) {
+        this.nodeSet = nodeSet;
+        this.hashCode = hashCode();
     }
 
     @Override
     public int hashCode() {
-        return key.hashCode();
+        return nodeSet.hashCode();
     }
 
     @Override
     public boolean equals(Object o) {
-        return this.key.equals(((MapLayout) o).key);
+        return this.nodeSet.equals(((MapLayout) o).nodeSet);
     }
 }
 
