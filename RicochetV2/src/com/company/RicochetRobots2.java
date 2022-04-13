@@ -6,7 +6,6 @@ import java.io.InputStreamReader;
 import java.util.*;
 
 import static com.company.RicochetRobots2.board;
-import static com.company.RicochetRobots2.robots;
 
 public class RicochetRobots2 {
 
@@ -18,7 +17,8 @@ public class RicochetRobots2 {
     public static int N;
     public static int R;
     public static Node[][] board;
-    public static short[] robots;
+    //public static short[] robots;
+    public static Node[] robots;
     public static Node goal;
 
     public static void main(String[] args) throws IOException {
@@ -47,75 +47,105 @@ public class RicochetRobots2 {
         //Stop when queue is empty, or path found (stop BFS when first (and thus fastest) path found)
         Path foundPath = null;
         while(!q.isEmpty() && foundPath == null) {
+
             Path p = q.remove(); //Pop path from queue
 
-            //Iterate over all robots (i=i+2 as 1 robot takes 2 spaces in array)
-            for(int i = 0; i < p.robots.length; i=i+2) {
-                //Get node robot is on from board 2D array:
-                Node n = board[p.robots[i]][p.robots[i+1]];
+            //System.out.println(p.path);
 
+            //Iterate over all robots (i=i+2 as 1 robot takes 2 spaces in array)
+            for(int i = 0; i < p.robots.length; i++) {
+                //Get node robot is on from board 2D array:
+                Node n = p.robots[i];
                 //Visiting upwards
                 Node nU = n.getStopNodeU(p.robots);
                 if(nU != null) {
-                    short[] updatedRobotLoc = Arrays.copyOf(p.robots,p.robots.length);
-                    updatedRobotLoc[i] = nU.y;
-                    updatedRobotLoc[i + 1] = nU.x;
-                    Path newPath = new Path(updatedRobotLoc);
-                    newPath.path = p.path + " " + i/2 + 'U';
-                    if(nU == goal && i/2 == 0) {
-                        foundPath = newPath;
-                        break;
+                    Node[] updatedRobotLoc = Arrays.copyOf(p.robots,p.robots.length);
+                    updatedRobotLoc[i] = nU;
+                    Set <Node> set = new HashSet<Node>();
+                    for(int j = 1; j < R; j++) {
+                        set.add(updatedRobotLoc[j]);
                     }
 
-                    q.add(newPath);
+                    if(!updatedRobotLoc[0].seenLayouts.contains(set)) {
+                        updatedRobotLoc[0].seenLayouts.add(set);
 
+                        Path newPath = new Path(updatedRobotLoc);
+                        newPath.path = p.path + " " + i + 'U';
+                        if(nU == goal && i == 0) {
+                            foundPath = newPath;
+                            break;
+                        }
+                        q.add(newPath);
+                    }
                 }
 
                 //Visiting downwards
                 Node nD = n.getStopNodeD(p.robots);
                 if(nD != null) {
-                    short[] updatedRobotLoc = Arrays.copyOf(p.robots,p.robots.length);
-                    updatedRobotLoc[i] = nD.y;
-                    updatedRobotLoc[i + 1] = nD.x;
-                    Path newPath = new Path(updatedRobotLoc);
-                    newPath.path = p.path  + " " + i/2 + 'D';
-                    if(nD == goal && i/2 == 0) {
-                        foundPath = newPath;
-                        break;
+                    Node[] updatedRobotLoc = Arrays.copyOf(p.robots,p.robots.length);
+                    updatedRobotLoc[i] = nD;
+                    Set <Node> set = new HashSet<Node>();
+                    for(int j = 1; j < R; j++) {
+                        set.add(updatedRobotLoc[j]);
                     }
-                    q.add(newPath);
+
+                    if(!updatedRobotLoc[0].seenLayouts.contains(set)) {
+                        updatedRobotLoc[0].seenLayouts.add(set);
+
+                        Path newPath = new Path(updatedRobotLoc);
+                        newPath.path = p.path + " " + i + 'D';
+                        if (nD == goal && i == 0) {
+                            foundPath = newPath;
+                            break;
+                        }
+                        q.add(newPath);
+                    }
                 }
 
                 //Visiting Left
                 Node nL = n.getStopNodeL(p.robots);
                 if(nL != null) {
-                    short[] updatedRobotLoc = Arrays.copyOf(p.robots,p.robots.length);
-                    updatedRobotLoc[i] = nL.y;
-                    updatedRobotLoc[i + 1] = nL.x;
-                    Path newPath = new Path(updatedRobotLoc);
-                    newPath.path = p.path + " " + i/2 + 'L';
-                    if(nL == goal && i/2 == 0) {
-                        foundPath = newPath;
-                        break;
+                    Node[] updatedRobotLoc = Arrays.copyOf(p.robots,p.robots.length);
+                    updatedRobotLoc[i] = nL;
+                    Set <Node> set = new HashSet<Node>();
+                    for(int j = 1; j < R; j++) {
+                        set.add(updatedRobotLoc[j]);
                     }
 
-                    q.add(newPath);
+                    if(!updatedRobotLoc[0].seenLayouts.contains(set)) {
+                        updatedRobotLoc[0].seenLayouts.add(set);
+
+                        Path newPath = new Path(updatedRobotLoc);
+                        newPath.path = p.path + " " + i + 'L';
+                        if (nL == goal && i == 0) {
+                            foundPath = newPath;
+                            break;
+                        }
+                        q.add(newPath);
+                    }
                 }
 
                 //Visiting Right
                 Node nR = n.getStopNodeR(p.robots);
                 if(nR != null) {
-                    short[] updatedRobotLoc = Arrays.copyOf(p.robots,p.robots.length);
-                    updatedRobotLoc[i] = nR.y;
-                    updatedRobotLoc[i + 1] = nR.x;
-                    Path newPath = new Path(updatedRobotLoc);
-                    newPath.path = p.path  + " " + i/2 + 'R';
-                    if(nR == goal && i/2 == 0) {
-                        foundPath = newPath;
-                        break;
+                    Node[] updatedRobotLoc = Arrays.copyOf(p.robots,p.robots.length);
+                    updatedRobotLoc[i] = nR;
+                    Set <Node> set = new HashSet<Node>();
+                    for(int j = 1; j < R; j++) {
+                        set.add(updatedRobotLoc[j]);
                     }
 
-                    q.add(newPath);
+                    if(!updatedRobotLoc[0].seenLayouts.contains(set)) {
+                        updatedRobotLoc[0].seenLayouts.add(set);
+
+                        Path newPath = new Path(updatedRobotLoc);
+                        newPath.path = p.path + " " + i + 'R';
+                        if (nR == goal && i == 0) {
+                            foundPath = newPath;
+                            break;
+                        }
+                        q.add(newPath);
+                    }
                 }
             }
         }
@@ -140,7 +170,7 @@ public class RicochetRobots2 {
         R = Integer.parseInt(br.readLine());
 
         board = new Node[N][N]; //(1 for air : 0 for wall)
-        robots = new short[2*R];  //([com.company.Robot][0: x, 1: y])
+        robots = new Node[R];  //([com.company.Robot][0: x, 1: y])
 
         //Run through map generation. Following inputs are to be expected:
         // 35 = '#'
@@ -185,8 +215,7 @@ public class RicochetRobots2 {
                 } else { // Rest should be numbers from 0 to 9 (Robots)
                     Node node = new Node(y,x);
                     board[y][x] = node;
-                    robots[(input-48)*2] = y;
-                    robots[(input-48)*2 + 1] = x;
+                    robots[(input-48)] = node;
                 }
             }
         }
@@ -213,9 +242,9 @@ public class RicochetRobots2 {
 
 class Path {
     public String path = "";
-    public short[] robots;
+    public Node[] robots;
 
-    public Path(short[] robots) {
+    public Path(Node[] robots) {
         this.robots = robots;
     }
 }
@@ -225,6 +254,7 @@ class Path {
 class Node {
     public Node U,R,D,L = null;
     public short x,y;
+    public Set <Set<Node>> seenLayouts = new HashSet<Set<Node>>();
 
     public Node(short y, short x) {
 
@@ -261,53 +291,53 @@ class Node {
     //Når pNode er defineret til this.u, så ændre jeg vel også på this.u når jeg ændre på pNode senere hen??
 
     //check if nessecary to stop earlier
-    public Node getStopNodeU(short[] robots) {
+    public Node getStopNodeU(Node[] robots) {
         if(this.U == null) return null;
         short y = U.y;
         short x = U.x;
-        for(int i = 0; i < robots.length; i = i + 2) { //Getting robot indexes (looping through all robots)
-            if(this.x != robots[i + 1] || this.y <= robots[i]) continue; //If not same y col or below or equal node (equal means robot is standing there,and is the moving robot)
-            if(y <= robots[i]) { // if robot is between else defined goToNode and current node:
-                y = (short) (robots[i] + 1);
+        for(int i = 0; i < robots.length; i++) { //Getting robot indexes (looping through all robots)
+            if(this.x != robots[i].x || this.y <= robots[i].y) continue; //If not same y col or below or equal node (equal means robot is standing there,and is the moving robot)
+            if(y <= robots[i].y) { // if robot is between else defined goToNode and current node:
+                y = (short) (robots[i].y + 1);
                 continue;
             }
         }
         return board[y][x];
     }
-    public Node getStopNodeD(short[] robots) {
+    public Node getStopNodeD(Node[] robots) {
         if(this.D == null) return null;
         short y = D.y;
         short x = D.x;
-        for(int i = 0; i < robots.length; i = i + 2) {
-            if(this.x != robots[i + 1] || this.y >= robots[i]) continue;
-            if(y >= robots[i]) {
-                y = (short) (robots[i] - 1);
+        for(int i = 0; i < robots.length;i++) {
+            if(this.x != robots[i].x || this.y >= robots[i].y) continue;
+            if(y >= robots[i].y) {
+                y = (short) (robots[i].y - 1);
                 continue;
             }
         }
         return board[y][x];
     }
-    public Node getStopNodeL(short[] robots) {
+    public Node getStopNodeL(Node[] robots) {
         if(this.L == null) return null;
         short y = L.y;
         short x = L.x;
-        for(int i = 0; i < robots.length; i = i + 2) {
-            if(this.y != robots[i] || this.x <= robots[i + 1]) continue;
-            if(x <= robots[i + 1]) {
-                x = (short) (robots[i + 1] + 1);
+        for(int i = 0; i < robots.length;i++) {
+            if(this.y != robots[i].y || this.x <= robots[i].x) continue;
+            if(x <= robots[i].x) {
+                x = (short) (robots[i].x + 1);
                 continue;
             }
         }
         return board[y][x];
     }
-    public Node getStopNodeR(short[] robots) {
+    public Node getStopNodeR(Node[] robots) {
         if(this.R == null) return null;
         short y = R.y;
         short x = R.x;
-        for(int i = 0; i < robots.length; i = i + 2) {
-            if(this.y != robots[i] || this.x >= robots[i + 1]) continue;
-            if(x >= robots[i + 1]) {
-                x = (short) (robots[i + 1] - 1);
+        for(int i = 0; i < robots.length;i++) {
+            if(this.y != robots[i].y || this.x >= robots[i].x) continue;
+            if(x >= robots[i].x) {
+                x = (short) (robots[i].x - 1);
                 continue;
             }
         }
