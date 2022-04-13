@@ -23,25 +23,16 @@ public class RicochetRobots2 {
     public static Queue<Path> q = new LinkedList<>();
     public static Path foundPath = null;
 
+
     public static void main(String[] args) throws IOException {
         readInput(); //Read data from Console, and generate board
 
 
 
-        Set <Node> set1 = new HashSet<Node>();
-        set1.add(new Node((short) 4,(short) 3));
-        set1.add(new Node((short) 1,(short) 2));
-        set1.add(new Node((short) 2,(short) 3));
-
-        Set <Node> set2 = new HashSet<Node>();
-        set2.add(new Node((short) 4,(short) 3));
-        set2.add(new Node((short) 1,(short) 2));
-        set2.add(new Node((short) 2,(short) 3));
-
-        System.out.println("set1: " + set1.hashCode());
-        System.out.println("set2: " + set2.hashCode());
-        System.out.println("set1: " + set1.hashCode());
-
+        Node[] n1 = {new Node((short) 4,(short) 3),new Node((short) 1,(short) 2),new Node((short) 2,(short) 3)};
+        MapLayout m1 = new MapLayout(n1);
+        Node[] n2 = {new Node((short) 4,(short) 3),new Node((short) 1,(short) 2),new Node((short) 2,(short) 3)};
+        MapLayout m2 = new MapLayout(n2);
 
         calculatePath(); //Run path finding algorithm.
     }
@@ -91,21 +82,24 @@ public class RicochetRobots2 {
             Node[] updatedRobotLoc = new Node[R];
             Node[] setArray = new Node[R - 1];
 
-            updatedRobotLoc[0] = path.robots[0];
-            for(int j = 1; j < R; j++) {
-                updatedRobotLoc[j] = path.robots[j];
-                setArray[j] = path.robots[j];
+            if(robotN == 0) {
+                updatedRobotLoc[0] = visitNode;
+            } else {
+                updatedRobotLoc[0] = path.robots[0];
             }
-            Arrays.sort(setArray);
-
-            Node[] updatedRobotLoc = Arrays.copyOf(path.robots,path.robots.length);
-            updatedRobotLoc[robotN] = visitNode;
-            Set <Node> set = new HashSet<Node>();
             for(int j = 1; j < R; j++) {
-                set.add(updatedRobotLoc[j]);
+                if(j == robotN) {
+                    updatedRobotLoc[j] = visitNode;
+                    setArray[j-1] = visitNode;
+                } else {
+                    updatedRobotLoc[j] = path.robots[j];
+                    setArray[j-1] = path.robots[j];
+                }
             }
+            MapLayout mapLayout = new MapLayout(setArray);
+            mapLayout.hashCode();
 
-            if(updatedRobotLoc[0].seenLayouts.add(set)) {
+            if(updatedRobotLoc[0].seenLayouts.add(mapLayout)) {
 
                 Path newPath = new Path(updatedRobotLoc);
                 newPath.path = path.path + " " + robotN + dirChar;
@@ -210,23 +204,34 @@ class Path {
     }
 }
 
-class mapLayout {
+class MapLayout {
     String key;
 
-
-    public mapLayout(String key) {
-
+    public MapLayout(Node[] nodes) {
+        Arrays.sort(nodes);
+        StringBuilder str = new StringBuilder();
+        for (Node n : nodes) {
+            str.append(n.x).append(",").append(n.y).append(",");
+        }
+        this.key = str.toString();
     }
 
+    @Override
+    public int hashCode() {
+        return key.hashCode();
+    }
 
-
+    @Override
+    public boolean equals(Object o) {
+        return this.key.equals(((MapLayout) o).key);
+    }
 }
 
 
 class Node implements Comparable<Node> {
     public Node U,R,D,L = null;
     public short x,y;
-    public Set <Set<Node>> seenLayouts = new HashSet<Set<Node>>();
+    public Set <MapLayout> seenLayouts = new HashSet<MapLayout>();
 
     public Node(short y, short x) {
 
