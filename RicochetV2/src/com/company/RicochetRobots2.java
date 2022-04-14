@@ -1,25 +1,19 @@
 package com.company;
 
-import javax.xml.crypto.NodeSetData;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.util.*;
 
 import static com.company.RicochetRobots2.board;
 
 public class RicochetRobots2 {
 
-    /**
-     * GEM ROBOTS SOM EN INTEGER I STEDET! NUMMERER ALLE POSITIONER LEFT TO RIGHT EACH ROW
-     */
-
-
     public static int N;
     public static int R;
     public static Node[][] board;
-    //public static short[] robots;
-    public static Node[] robots;
+    public static Robot[] robots;
     public static Node goal;
     public static Queue<Path> q = new LinkedList<>();
     public static Path foundPath = null;
@@ -28,8 +22,15 @@ public class RicochetRobots2 {
     public static void main(String[] args) throws IOException {
         readInput(); //Read data from Console, and generate board
 
+        /*
+        Robot[] robots1 = {new Robot(board[0][2],0),new Robot(board[0][2],0)};
+        MapLayout mapLayout1 = new MapLayout(robots1);
+        System.out.println(mapLayout1.hashCode());
 
-
+        Robot[] robots2 = {new Robot(board[0][2],0),new Robot(board[0][2],0)};
+        MapLayout mapLayout2 = new MapLayout(robots2);
+        System.out.println(mapLayout2.hashCode());
+        */
 
         calculatePath(); //Run path finding algorithm.
     }
@@ -38,9 +39,14 @@ public class RicochetRobots2 {
         Path path = pathBFS(); //run BFS algorithm.
 
         //Print path from String, steps seperated with spaces
-        String[] pathSteps = path.path.split(" ");
-        for(int i = 1; i < pathSteps.length; i++) {
-            System.out.println(pathSteps[i]);
+        ArrayList<String> pathSteps = new ArrayList<>();
+        Path pathStep = path;
+        while(pathStep.parent != null) {
+            pathSteps.add("" + pathStep.moveNum + pathStep.moveDir);
+            pathStep = pathStep.parent;
+        }
+        for(int i = pathSteps.size() - 1; i >= 0; i--) {
+            System.out.println(pathSteps.get(i));
         }
     }
 
@@ -55,19 +61,20 @@ public class RicochetRobots2 {
 
             //Iterate over all robots (i=i+2 as 1 robot takes 2 spaces in array)
             for(int i = 0; i < R; i++) {
-                Node n = p.robots[i];
+                Robot r = p.robots[i];
 
                 //Visiting upwards
-                visitNode(n.getStopNodeU(p.robots), p, i, 'U');
+                visitNode(r.node.getStopNodeU(p.robots), p, i, 'U');
 
                 //Visiting downwards
-                visitNode(n.getStopNodeD(p.robots), p, i, 'D');
+                visitNode(r.node.getStopNodeD(p.robots), p, i, 'D');
 
                 //Visiting Left
-                visitNode(n.getStopNodeL(p.robots), p, i, 'L');
+                visitNode(r.node.getStopNodeL(p.robots), p, i, 'L');
 
                 //Visiting Right
-                visitNode(n.getStopNodeR(p.robots), p, i, 'R');
+                visitNode(r.node.getStopNodeR(p.robots), p, i, 'R');
+
             }
         }
         return foundPath;
@@ -75,28 +82,35 @@ public class RicochetRobots2 {
 
     public static void visitNode(Node visitNode, Path path, int robotN, char dirChar) {
         if(visitNode != null) {
-            Node[] updatedRobotLoc = new Node[R];
-            Set <Node> nodeSet = new HashSet<Node>();
-            if(robotN == 0) {
-                updatedRobotLoc[0] = visitNode;
-            } else {
-                updatedRobotLoc[0] = path.robots[0];
+
+            Robot[] updatedRobotLoc = new Robot[R];
+            for(int i = 0; i < R; i++) {
+                updatedRobotLoc[i] = new Robot(path.robots[i].node,path.robots[i].num);
             }
-            for(int j = 1; j < R; j++) {
-                if(j == robotN) {
-                    updatedRobotLoc[j] = visitNode;
-                    nodeSet.add(visitNode);
-                } else {
-                    updatedRobotLoc[j] = path.robots[j];
-                    nodeSet.add(path.robots[j]);
+
+            //Sort array;
+            int i = robotN;
+            Robot tR = updatedRobotLoc[i];
+            //Sort higher
+            if(robotN > 0 && robotN < (R - 1) && visitNode.compareTo(updatedRobotLoc[i + 1].node) > 0 ) {
+                for(i = robotN; i < R-1 && visitNode.compareTo(updatedRobotLoc[i+1].node) > 0; i++) {
+                    updatedRobotLoc[i] = updatedRobotLoc[i+1];
+                }
+            //Sort lower
+            } else if(robotN > 1 && visitNode.compareTo(updatedRobotLoc[i - 1].node) < 0) {
+                for(i = robotN; i > 1 && visitNode.compareTo(updatedRobotLoc[i-1].node) < 0 ; i--) {
+                    updatedRobotLoc[i] = updatedRobotLoc[i-1];
                 }
             }
+            tR.node = visitNode;
+            updatedRobotLoc[i] = tR;
 
-            MapLayout mapLayout = new MapLayout(nodeSet);
-
-            if(updatedRobotLoc[0].seenLayouts.add(mapLayout)) {
+            MapLayout mapLayout = new MapLayout(updatedRobotLoc);
+            if(updatedRobotLoc[0].node.seenLayouts.add(mapLayout)) {
                 Path newPath = new Path(updatedRobotLoc);
-                newPath.path = path.path + " " + robotN + dirChar;
+                newPath.moveDir = dirChar;
+                newPath.moveNum = updatedRobotLoc[i].num;
+                newPath.parent = path;
                 if (visitNode == goal && robotN == 0) {
                     foundPath = newPath;
                 }
@@ -120,7 +134,7 @@ public class RicochetRobots2 {
         R = Integer.parseInt(br.readLine());
 
         board = new Node[N][N]; //(1 for air : 0 for wall)
-        robots = new Node[R];  //([com.company.Robot][0: x, 1: y])
+        robots = new Robot[R];  //([com.company.Robot][0: x, 1: y])
 
         //Run through map generation. Following inputs are to be expected:
         // 35 = '#'
@@ -164,8 +178,18 @@ public class RicochetRobots2 {
                 } else { // Rest should be numbers from 0 to 9 (Robots)
                     Node node = new Node(y,x);
                     board[y][x] = node;
-                    robots[(input-48)] = node;
+                    robots[(input-48)] = new Robot(node, (input-48));
                 }
+            }
+        }
+        if(R > 1) {
+            Robot[] sentinelRobots = new Robot[R-1];
+            for(int j = 1; j < R; j++) {
+                sentinelRobots[j-1] = robots[j];
+            }
+            Arrays.sort(sentinelRobots);
+            for(int j = 0; j < sentinelRobots.length; j++) {
+                robots[j+1] = sentinelRobots[j];
             }
         }
 
@@ -190,31 +214,58 @@ public class RicochetRobots2 {
 }
 
 class Path {
-    public String path = "";
-    public Node[] robots;
+    public Robot[] robots;
+    public Path parent = null;
+    public char moveDir;
+    public int moveNum;
 
-    public Path(Node[] robots) {
+    public Path(Robot[] robots) {
         this.robots = robots;
     }
 }
 
-class MapLayout {
-    public int hashCode;
-    public Set<Node> nodeSet;
+class Robot implements Comparable<Robot> {
+    public Node node;
+    public int num;
 
-    public MapLayout(Set <Node> nodeSet) {
-        this.nodeSet = nodeSet;
-        this.hashCode = hashCode();
+    public Robot(Node n, int num) {
+        this.node = n;
+        this.num = num;
+    }
+
+    @Override
+    public int compareTo(Robot that) {
+        return this.node.compareTo(that.node);
+    }
+
+}
+
+class MapLayout {
+    int hashCode = 0;
+    Robot[] robotArray;
+
+    public MapLayout(Robot[] robots) {
+        robotArray = robots;
+        for (Robot r : robotArray) {
+            hashCode = 37 * hashCode + r.node.hashCode();
+        }
     }
 
     @Override
     public int hashCode() {
-        return nodeSet.hashCode();
+        return hashCode;
     }
 
     @Override
     public boolean equals(Object o) {
-        return this.nodeSet.equals(((MapLayout) o).nodeSet);
+        int l = robotArray.length;
+        MapLayout other = (MapLayout) o;
+        for(int i = 0; i < l; i++) {
+            if(this.robotArray[i].node != other.robotArray[i].node) {
+                return false;
+            }
+        }
+        return true;
     }
 }
 
@@ -268,53 +319,53 @@ class Node implements Comparable<Node> {
     }
 
     //check if nessecary to stop earlier
-    public Node getStopNodeU(Node[] robots) {
+    public Node getStopNodeU(Robot[] robots) {
         if(this.U == null) return null;
         short y = U.y;
         short x = U.x;
         for(int i = 0; i < robots.length; i++) { //Getting robot indexes (looping through all robots)
-            if(this.x != robots[i].x || this.y <= robots[i].y) continue; //If not same y col or below or equal node (equal means robot is standing there,and is the moving robot)
-            if(y <= robots[i].y) { // if robot is between else defined goToNode and current node:
-                y = (short) (robots[i].y + 1);
+            if(this.x != robots[i].node.x || this.y <= robots[i].node.y) continue; //If not same y col or below or equal node (equal means robot is standing there,and is the moving robot)
+            if(y <= robots[i].node.y) { // if robot is between else defined goToNode and current node:
+                y = (short) (robots[i].node.y + 1);
                 continue;
             }
         }
         return board[y][x];
     }
-    public Node getStopNodeD(Node[] robots) {
+    public Node getStopNodeD(Robot[] robots) {
         if(this.D == null) return null;
         short y = D.y;
         short x = D.x;
         for(int i = 0; i < robots.length;i++) {
-            if(this.x != robots[i].x || this.y >= robots[i].y) continue;
-            if(y >= robots[i].y) {
-                y = (short) (robots[i].y - 1);
+            if(this.x != robots[i].node.x || this.y >= robots[i].node.y) continue;
+            if(y >= robots[i].node.y) {
+                y = (short) (robots[i].node.y - 1);
                 continue;
             }
         }
         return board[y][x];
     }
-    public Node getStopNodeL(Node[] robots) {
+    public Node getStopNodeL(Robot[] robots) {
         if(this.L == null) return null;
         short y = L.y;
         short x = L.x;
         for(int i = 0; i < robots.length;i++) {
-            if(this.y != robots[i].y || this.x <= robots[i].x) continue;
-            if(x <= robots[i].x) {
-                x = (short) (robots[i].x + 1);
+            if(this.y != robots[i].node.y || this.x <= robots[i].node.x) continue;
+            if(x <= robots[i].node.x) {
+                x = (short) (robots[i].node.x + 1);
                 continue;
             }
         }
         return board[y][x];
     }
-    public Node getStopNodeR(Node[] robots) {
+    public Node getStopNodeR(Robot[] robots) {
         if(this.R == null) return null;
         short y = R.y;
         short x = R.x;
         for(int i = 0; i < robots.length;i++) {
-            if(this.y != robots[i].y || this.x >= robots[i].x) continue;
-            if(x >= robots[i].x) {
-                x = (short) (robots[i].x - 1);
+            if(this.y != robots[i].node.y || this.x >= robots[i].node.x) continue;
+            if(x >= robots[i].node.x) {
+                x = (short) (robots[i].node.x - 1);
                 continue;
             }
         }
@@ -322,4 +373,3 @@ class Node implements Comparable<Node> {
     }
 
 }
-
