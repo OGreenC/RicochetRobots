@@ -206,6 +206,70 @@ public class RicochetRobots2 {
                 board[ty][tx].D = board[N-1][tx];
             }
         }
+
+        //Calculating fastest possible distance to goal Node.
+        Queue<Node> qu = new LinkedList<>();
+
+        goal.distanceToGoal = 0;
+        qu.add(goal);
+
+        while (!qu.isEmpty()) {
+            Node n = qu.remove();
+
+            if(n.y > 0) {
+                Node U = board[n.y - 1][n.x];
+                while(U != null) {
+                    if(U.distanceToGoal == -1) {
+                        U.distanceToGoal = n.distanceToGoal + 1;
+                        qu.add(board[U.y][U.x]);
+                    }
+                    if(U.y == 0) break;
+                    U = board[U.y - 1][U.x];
+                }
+            }
+            if(n.y < N - 1) {
+                Node D = board[n.y + 1][n.x];
+                while(D != null) {
+                    if(D.distanceToGoal == -1) {
+                        D.distanceToGoal = n.distanceToGoal + 1;
+                        qu.add(board[D.y][D.x]);
+                    }
+                    if(D.y == N - 1) break;
+                    D = board[D.y + 1][D.x];
+                }
+            }
+            if(n.x > 0) {
+                Node L = board[n.y][n.x - 1];
+                while(L != null) {
+                    if(L.distanceToGoal == -1) {
+                        L.distanceToGoal = n.distanceToGoal + 1;
+                        qu.add(board[L.y][L.x]);
+                    }
+                    if(L.x == 0) break;
+                    L = board[L.y][L.x - 1];
+                }
+            }
+            if(n.x < N - 1) {
+                Node R = board[n.y][n.x + 1];
+                while(R != null) {
+                    if(R.distanceToGoal == -1) {
+                        R.distanceToGoal = n.distanceToGoal + 1;
+                        qu.add(board[R.y][R.x]);
+                    }
+                    if(R.x == N - 1) break;
+                    R = board[R.y][R.x + 1];
+                }
+            }
+        }
+        /*
+        System.out.println();
+        for (Node[] nRow: board) {
+            for (Node n: nRow) {
+                System.out.print((n == null) ? " # " : " " + n.distanceToGoal + " ");
+            }
+            System.out.println();
+        }
+         */
     }
 }
 
@@ -271,6 +335,7 @@ class Node implements Comparable<Node> {
     public Node U,R,D,L = null;
     public short x,y;
     public Set <MapLayout> seenLayouts = new HashSet<MapLayout>();
+    public int distanceToGoal = -1;
 
     public Node(short y, short x) {
 
