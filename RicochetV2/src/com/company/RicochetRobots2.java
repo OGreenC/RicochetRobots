@@ -3,9 +3,7 @@ package com.company;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.util.*;
-
 import static com.company.RicochetRobots2.board;
 
 public class RicochetRobots2 {
@@ -21,17 +19,6 @@ public class RicochetRobots2 {
 
     public static void main(String[] args) throws IOException {
         readInput(); //Read data from Console, and generate board
-
-        /*
-        Robot[] robots1 = {new Robot(board[0][2],0),new Robot(board[0][2],0)};
-        MapLayout mapLayout1 = new MapLayout(robots1);
-        System.out.println(mapLayout1.hashCode());
-
-        Robot[] robots2 = {new Robot(board[0][2],0),new Robot(board[0][2],0)};
-        MapLayout mapLayout2 = new MapLayout(robots2);
-        System.out.println(mapLayout2.hashCode());
-        */
-
         calculatePath(); //Run path finding algorithm.
     }
 
@@ -63,18 +50,27 @@ public class RicochetRobots2 {
             for(int i = 0; i < R; i++) {
                 Robot r = p.robots[i];
 
+                boolean doBackCheck = p.moveNum == r.num;
+
                 //Visiting upwards
-                visitNode(r.node.getStopNodeU(p.robots), p, i, 'U');
+                if(!(doBackCheck && p.moveDir == 'D')) {
+                    visitNode(r.node.getStopNodeU(p.robots), p, i, 'U');
+                }
 
                 //Visiting downwards
-                visitNode(r.node.getStopNodeD(p.robots), p, i, 'D');
+                if(!(doBackCheck && p.moveDir == 'U')) {
+                    visitNode(r.node.getStopNodeD(p.robots), p, i, 'D');
+                }
 
                 //Visiting Left
-                visitNode(r.node.getStopNodeL(p.robots), p, i, 'L');
+                if(!(doBackCheck && p.moveDir == 'R')) {
+                    visitNode(r.node.getStopNodeL(p.robots), p, i, 'L');
+                }
 
                 //Visiting Right
-                visitNode(r.node.getStopNodeR(p.robots), p, i, 'R');
-
+                if(!(doBackCheck && p.moveDir == 'L')) {
+                    visitNode(r.node.getStopNodeR(p.robots), p, i, 'R');
+                }
             }
         }
         return foundPath;
@@ -246,8 +242,9 @@ class MapLayout {
 
     public MapLayout(Robot[] robots) {
         robotArray = robots;
-        for (Robot r : robotArray) {
-            hashCode = 37 * hashCode + r.node.hashCode();
+        int l = robotArray.length;
+        for(int i = 1; i < l; i++) {
+            hashCode = 37 * hashCode + (robotArray[i].node.y * 1000 + robotArray[i].node.x);
         }
     }
 
@@ -260,7 +257,7 @@ class MapLayout {
     public boolean equals(Object o) {
         int l = robotArray.length;
         MapLayout other = (MapLayout) o;
-        for(int i = 0; i < l; i++) {
+        for(int i = 1; i < l; i++) {
             if(this.robotArray[i].node != other.robotArray[i].node) {
                 return false;
             }
